@@ -39,10 +39,31 @@ public class Target : MonoBehaviour
     [Tooltip("Ekranın kenarından ne kadar uzaklaşınca hedefin otomatik yok edileceği (viewport birimi)")]
     [SerializeField] private float boundaryMargin = 0.25f;
 
+    [Header("Visual Settings")]
+    [Tooltip("Does the bird sprite face right by default? " +
+             "Leave this checked if the artwork's default orientation faces right.")]
+    [SerializeField] private bool spriteFacesRightByDefault = true;
+
+    [Tooltip("The SpriteRenderer used to flip the sprite. " +
+             "If left empty, it will automatically be taken from this GameObject or its children.")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+
     private Vector2 moveDirection = Vector2.right;
     private float moveSpeed;
     private Camera mainCamera;
     private bool isDestroyed = false;
+
+    private void Awake()
+    {
+        if (spriteRenderer == null)
+        {
+            spriteRenderer = GetComponent<SpriteRenderer>();
+            if (spriteRenderer == null)
+            {
+                spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+            }
+        }
+    }
 
     private void Start()
     {
@@ -56,6 +77,20 @@ public class Target : MonoBehaviour
     public void SetDirection(Vector2 direction)
     {
         moveDirection = direction.normalized;
+        UpdateSpriteFacing();
+    }
+
+    /// <summary>
+    /// Flips the sprite horizontally based on the bird's flight direction,
+    /// so it always faces the direction it's flying.
+    /// </summary>
+    private void UpdateSpriteFacing()
+    {
+        if (spriteRenderer == null || Mathf.Approximately(moveDirection.x, 0f)) return;
+
+        bool movingRight = moveDirection.x > 0f;
+
+        spriteRenderer.flipX = spriteFacesRightByDefault ? !movingRight : movingRight;
     }
 
     private void Update()
